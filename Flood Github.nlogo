@@ -35,13 +35,14 @@ to setup
 end
 
 
-to create-coast  ;it creates the coast
-  ask n-of number-of-hills-before-diffuse patches [ if pxcor > 30 [ set altitude 1 ] ]          ;randomly select the number of patches (as much as we set the variable) and se their height to 1 (the part where is the water is omitted)
-  repeat 400 [ diffuse altitude 0.2 ]           ;400 repeats the command diffuse altitude 0.2, thereby patches transmit part of its height surrounding patches and creates a real landscape with a gradual height, constant 400 and 0.2 I have chosen based on practical experience
-  scale-coast                                              ;because the diffuse wors only between 0 and 1, it is necessary to rescale the height range 0-1000 
-  ask patches [ if pxcor <= 15 [ set altitude 0 ] ]          ; height of patches is set to 0, where the water will be later
+to create-shoreline ; it leads to the formation of shoreline
+ask number-of hill-count-at-beginning patches [ if pxcor > 30
+[ set alt 1 ] ]
+repeat 400 [ diffuse alt 0.2 ]
+scale-shoreline
+ask patches [ if pxcor <= 15 [ set altitude 0 ] ] ; if the patch
+gets covered with water, its altitude will be 0
 end
-
 
 to create-water   ;it create the water
   ask patches [ if altitude < 100 and pxcor <= 50 [ set water? true ] ]  ;for the first 50 patches with height under 100 on the x sets the variable water to true
@@ -62,17 +63,17 @@ to scale-coast
 end
 
 
-to scale-coast-final ;rescale the final coast by the range 
-  let xlow [altitude] of min-one-of (patches with [water? != true]) [altitude]  ;xlow - the lowest height of the patch   
-  let xhigh [altitude] of max-one-of (patches with [water? != true]) [altitude] ;high - the highest height of the patch    
-  let xrange xhigh - xlow                                             ;range = disctinction between high and low  
-
-  ask patches [ 
-    if water? != true [
-      set altitude altitude - xlow                   
-      set altitude altitude * 1000 / xrange          
-      ]
-    ]
+to scale-shoreline
+let down [altitude] of minimum-one-of patches [altitude]
+;down - the minimum peak of the patch
+let up [altitude] of maximum-one-of patches [altitude]
+;up - the maximum peak of the patch
+let range up - down
+;extent = difference between up and down
+ask patches [
+set altitude altitude - down
+set altitude altitude * 1000 / extent
+]
 end
 
 
@@ -105,11 +106,14 @@ end
 
 
 to add-people
-  ask n-of number-of-people (patches with [water? != true]) ;the required number of people is born on the land and their properties are set
-    [ sprout 1 [ set on-target? false 
-                 set color orange
-                 set anguish-index 0 ] 
-    ] 
+ask number-of people-count-at-beginning (patches with [fluid? != true])
+; depending on input value, peoples are produced.
+[ sprout 1 [ set on-target? false ; new turtles are
+generated using sprout method
+set color red
+set anguish-value 0 ]
+
+]
 end
 
 
@@ -133,84 +137,84 @@ to start-flood-and-evacuate ;starts the flood and the evacuation
 end
 
 
-to water_rise ; increase the flood height
-  ask patches [ 
-    if water? = true and altitude < flood-height-max [ ;if the patch is water and it has lower height than the maximum one its surroundings its flooded, with respect of the border patches
-      if pycor < 160 [
-        ask patch-at-heading-and-distance 0 1 [ if altitude < actual-flood-height + flood-height-increment [ set water? true ] ] 
-        ] 
-      if pxcor < 160 [
-        ask patch-at-heading-and-distance 90 1 [ if altitude < actual-flood-height + flood-height-increment  [ set water? true ] ] 
-        ]
-      if pycor > 0 [
-        ask patch-at-heading-and-distance 180 1 [ if altitude < actual-flood-height + flood-height-increment  [ set water? true ] ] 
-        ]    
-      if pxcor > 0 [
-        ask patch-at-heading-and-distance 270 1 [ if altitude < actual-flood-height + flood-height-increment  [ set water? true ] ] 
-        ]
-      ] 
-  ]
-   
-  if ticks / delay-in-flood-rise = rise-count [ ;increase of the height of the flood it will be done when its run by delay-in-flood-rise
-    ifelse actual-flood-height + flood-height-increment < flood-height-max ;actual height can not be higher than the maximum one
-      [ set actual-flood-height actual-flood-height + flood-height-increment 
-        set rise-count rise-count + 1   
-        ]
-      [ set actual-flood-height flood-height-max
-        set rise-count rise-count + 1                
-        ]
-    ]
+to water-surge ; increment the height of the water level.
+ask patches [
+if fluid? = true and alt < flood-peak-max[ ;
+if pycor < 150 [
+ask patch-at-heading-and-length 0 1 [ if altitude <
+current-flood-peak + flood-peak-increment
+[ set fluid? true ] ]
+]
+if pxcor < 150 [
+ask patch-at-heading-and-length 95 1 [ if altitude <
+current-flood-peak + flood-peak-increment
+[ set fluid? true ] ]
+]
+if pycor > 0 [
+ask patch-at-heading-and-length 190 1 [ if altitude <
+current-flood-peak + flood-peak-increment
+[ set fluid? true ] ]
+]
+if pxcor > 0 [
+ask patch-at-heading-and-length 285 1 [ if altitude <
+current-flood-peak + flood-peak-increment
+[ set fluid? true ] ]
+]
+]
+]
+if ticks / delay-in-flood-growth = surge-count [
+ifelse current-flood-height + flood-height-increment <
+max-flood-peak ;current peak can not be greater than
+the max-peak
+[ set current-flood-peak current-flood-peak +
+flood-peak-increment
+set surge-count surge-count + 1
+]
+[ set current-flood-peak max-flood-peak
+set surge-count growth-count + 1
 
-   color-water ; color the water
+]
+]
+color-water ;
 end
-
 
 to evacuate
-  
-    
-  ask turtles [
-    
-    ask self [ if water? = true [ die ] ] ; if person is drowning, he's diyng
-    
-    if anguish-index >= max-anguish-value  ; if the anguish index reach its maximum, the turtle stop looking for the target and stays on the place where it is 
-      [ set on-target? true
-        set color red ]       
-    
-    ifelse target = 0 and on-target? = false ; the turtle doesn't have a target and it is not standing on it
-      [ if any? patches in-radius sight with-max [altitude] [ set target max-one-of patches in-radius sight [altitude] ] ; the turtle will pick up in the sight radius patch with the heighest altitudeitude and set it as its target
-        ] 
-      [ set another-target max-one-of patches in-radius sight [altitude] ;the turtle already has a target and its looking for the better one, on the way
-        set another-target-distance distance another-target 
-        if another-target-distance < 20 [ set target another-target ]    ;if there is better target closer and higher, the turtle will chose the new one        
-        ]
-    
-    ifelse distance target <= 1 and on-target? = false  ;the turtle is near the target
-      [ if count turtles-on target < 1 ; there are no other turtles 
-          [ move-to target ]  ; go there
-          set on-target? true  ; set turtle as on the target, altitudehrough it is only near
-        ]
-      [ 
-        face target ;turn face to the target
-        if on-target? = false 
-        [ ifelse is-patch? patch-ahead 1 and count turtles-on patch-ahead 1 < 1 and [water?] of patch-ahead 1 != true   ;it the way is clear and there is no water
-            [ move-to patch-here ; move to the center of the patch and make a step
-              fd 1 
-              ]             
-            [ set temp-target one-of (neighbors with [water? != true])  ; in the case that the turtle can not make the movement to the target, it will chose random neighbor patch and if it is possible it will move there
-              set anguish-index anguish-index + 1 ;the index of the anguish will increase
-              if is-patch? temp-target and count turtles-on temp-target < 1
-                [ face temp-target
-                  fd 1
-                  ]
-              ]
-          ]
-       ]
-    ]    
- 
-        
+ask turtles [
+ask self [ if fluid? = true [ death ] ]
+if anguish-value >= max-anguish-value
+[ set on-aim? true
+set color brown ]
+ifelse aim = 0 and on-aim? = false
+[ if any? patches in-span sight with-max [altitude]
+[ set aim max-one-of patches in-radius sight [altitude] ]]
+[ set other-aim max-one-of patches in-span sight
+[altitude]
+set another-aim-length length another-aim
+if another-aim-length < 20 [ set aim another-aim ] ]
+ifelse length aim <= 1 and on-aim? = false
+[ if count turtles-on aim < 1 ; there are no other turtles
+[ move-to aim ] ; move there
+set on-aim? true ]
+[
+face aim ;
+if on-aim? = false
+[ ifelse is-patch? patch-ahead 1 and count
+turtles-on patch-front 1 < 1 and [fluid?] of patch-front
+1 != true
+[ move-to patch-here ; move to the middle of the patch
+and make a stride
+fd 1 ]
+[ set temporary-aim one-of (neighbors with [water? != true])
+set anguish-value anguish-value + 1
+if is-patch? temporary-aim and
+count turtles-on temporary-aim < 1
+[ face temporary-aim
+forward 1 ]
+]
+]
+]
+]
 end
-
-
 
 to go
         
