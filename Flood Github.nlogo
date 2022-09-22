@@ -24,7 +24,8 @@ to setup
   clear-all                             ;deletes all
   set-default-shape turtles "person"    ;the shape of the turtles - person
   ask patches [ set water? false ]      ;at the start, all patches are set to not be water
-  create-coast                          ;it launches procedures ...
+  create-
+;it launches procedures ...
   create-water
   color-coast  
   color-water
@@ -505,59 +506,6 @@ Output variables
 0.0
 1
 
-@#$#@#$#@
-## WHAT IS IT?
-
-This project simulates the process of evacuation of people living on the coast during the coming flood.
-
-## DESCRIPTION OF THE MODEL
-
-####Buttons
-Actual flood height - actual-flood-height represents the height of the current water level
-Start flood - start-flood? boolean variable, which will starts the flood coming to the ashore
-Start evacuate - start-evacuate? boolean variable, which will alarm citizens and launch the evacuation of the people
-Rise count - rise-count auxiliary variable for rise-speed, to determine after how many tick the water level increase by the step
-Low - low is auxiliary variable in the procedure scale-coast
-High - high is auxiliary variable in the procedure scale-coast
-Range - range is auxiliary variable in the procedure scale-coast
-Xlow - xlow is auxiliary variable for procedure scale-coast-final
-Xhigh - xhigh is auxiliary variable for procedure scale-coast-final
-Xrange - xrange is auxiliary variable for procedure scale-coast-final
-
-#####Terrain creation:
-Number of hills before diffuse - number-of-hills-before-diffuse is global variable which determines how many hills before diffuse will be generated at the start of the simulation
-Number of people - number-of-people is global variable which determines how many people will be generated at the start of the simulation
-
-#####Flood parameters:
-Maximal flood height - max-flood-height is global variable which determines maximal height of the flood
-Flood height step - flood-height-step is global variable which determines height of the step, which the flood will make
-Rise speed - rise-speed is global variable which determines the speed of the rise of the water level. Every flood step will start in the second, when there is the multiple of the tick and the rise speed. 1 represents the maximal speed
-
-#####People parameters:
-Visibility - visibility is global variable determines how far can people (turtles) see, they use it by looking for the highest situated place because of the rescue.
-Maximal despair index - max-despair-index represents global variable, where the failed attempts are load by looking for the target (the highest situated place). If the index reaches its maximum value, people stop looking for that place.
-
-#####Variables of turtles (people)
-Target - target is the goal patch, where the turtle after looking around want go. It is the highest point within its visibility.
-On-target - on-target? - boolean variable, which tells if the turtle reach its goal patch
-Another target - another-target - it is patch, substitute goal, which turtle is looking for during the way to the to target. In case of need, can use this goal instead of the previous target.
-Another target distance - another-target-distance represents the distance from the turtle to another target
-Despair index- despair-index represents failed attempts on the way to target
-Temp target - temp-target is used, if the turtle can not reach the original way in some reason
-
-#####Variables of patches
-Alt - alt represents altitude, how hight the patches are
-Water - water? is boolean variable, which tells us if its water or not
-
-
-## HOW DOES THE SIMULATION WORKS
-
-At the beginnings, there is need to setup the whole world, where the simulation will run. Therefore there are the World creation parameters. In the first slider "number-of-hills-before-diffuse" there can be set the number of actual hills from 100 to 500. In the second slider "number-of-people" there can be the number of actual population set. It could be from the 1 to 3000 citizens.
-There is also need to setup the flood parameters. There could be maximum flood height setup from 0 to 1000 and flood height step from 1 to 100. You can also setup the rise-speed from 1 to 10. Global variable rise speed works backwards it means, if you setup the rise speed as 1 the speed will be actually maximal. Rise speed = 2, 2 ticks = 1 step.
-We can also set the people parameters. How far can people see tells the visibility, which is set to 50 by default. The highest visibility means the biggest chance to find the highest place, but it means the possibility of the longer way there. Despair index is set to 20 by default. So the people can have 20 difficulties, it means the bigger chance to live, but it means the longer time with looking for the way. It is directly proportional to the number of generated people.
-By the pressing the Go button the world starts living. People will randomly move and when the start flood & evacuate button is pressed, water start rising and people starts evacuate.
-For the new simulation stop the Go button and press the Setup button.
-@#$#@#$#@
 default
 true
 0
